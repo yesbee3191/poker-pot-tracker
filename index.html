@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Pot Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --felt: #1a2e1a;
+  --felt-light: #213a21;
+  --felt-dark: #111e11;
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-dim: #7a6230;
+  --chip-red: #c0392b;
+  --chip-blue: #1a5276;
+  --chip-white: #d5d8dc;
+  --text: #f0ead6;
+  --text-muted: #8a9b8a;
+  --text-dim: #4a5f4a;
+  --border: rgba(201,168,76,0.2);
+  --border-bright: rgba(201,168,76,0.5);
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --success: #27ae60;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.07);
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--felt-dark);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.bg-pattern {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(26,46,26,0.9) 0%, transparent 70%),
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.008) 10px, rgba(255,255,255,0.008) 11px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.header-suit {
+  font-size: 1.4rem;
+  color: var(--gold-dim);
+  letter-spacing: .5rem;
+  margin-bottom: .5rem;
+}
+.header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.6rem;
+  color: var(--gold);
+  letter-spacing: .1em;
+  line-height: 1;
+}
+.header p {
+  font-size: .78rem;
+  color: var(--text-muted);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin-top: .4rem;
+}
+
+/* Cards / sections */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: .12em;
+  color: var(--gold);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.card-title::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 1em;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+/* Form elements */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .75rem;
+}
+.field-row label {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  min-width: 90px;
+}
+input[type="number"], input[type="text"] {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: .9rem;
+  padding: .45rem .7rem;
+  width: 100%;
+  outline: none;
+  transition: border-color .15s;
+}
+input[type="number"] { width: 100px; }
+input[type="number"]:focus, input[type="text"]:focus {
+  border-color: var(--gold);
+}
+input::placeholder { color: var(--text-dim); }
+
+
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .6rem 1.4rem;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+  letter-spacing: .04em;
+}
+.btn-primary {
+  background: var(--gold);
+  color: #1a1200;
+  width: 100%;
+  margin-top: .5rem;
+  font-size: .9rem;
+  padding: .75rem;
+  font-weight: 500;
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+.btn-primary:active { transform: scale(.98); }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--text-muted);
+  font-size: .8rem;
+  padding: .4rem 1rem;
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.btn-danger { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: var(--danger); }
+.btn-danger:hover { background: rgba(231,76,60,0.25); }
+
+/* Stage tabs */
+.stage-nav {
+  display: flex;
+  gap: .4rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.stage-nav::-webkit-scrollbar { height: 2px; }
+.stage-nav::-webkit-scrollbar-track { background: transparent; }
+.stage-nav::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+.stage-tab {
+  flex-shrink: 0;
+  padding: .4rem .9rem;
+  border-radius: 20px;
+  font-size: .75rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: transparent;
+  transition: all .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.stage-tab:hover { border-color: var(--border-bright); color: var(--text); }
+.stage-tab.active { background: var(--gold); border-color: var(--gold); color: #1a1200; font-weight: 500; }
+.stage-tab.done { border-color: rgba(201,168,76,0.4); color: var(--gold-dim); }
+
+/* Player action rows */
+.player-action {
+  display: grid;
+  grid-template-columns: 1fr 90px auto auto;
+  gap: .5rem;
+  align-items: center;
+  padding: .6rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.player-action:last-of-type { border-bottom: none; }
+.pa-name {
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pa-name.folded { color: var(--text-dim); text-decoration: line-through; }
+.pa-bet { position: relative; }
+.pa-bet input { width: 90px; padding: .4rem .5rem; font-size: .85rem; }
+.toggle-btn {
+  padding: .35rem .6rem;
+  border-radius: 5px;
+  font-size: .72rem;
+  letter-spacing: .04em;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  transition: all .15s;
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+}
+.toggle-btn.fold-btn:hover, .toggle-btn.fold-btn.active { background: rgba(231,76,60,0.15); border-color: var(--danger); color: var(--danger); }
+.toggle-btn.allin-btn:hover, .toggle-btn.allin-btn.active { background: rgba(243,156,18,0.15); border-color: var(--warning); color: var(--warning); }
+.toggle-btn:disabled { opacity: .3; cursor: default; }
+
+/* Pot display */
+.pot-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
+  padding: .7rem 1rem;
+  margin-bottom: .75rem;
+}
+.pot-bar span:first-child { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
+.pot-bar span:last-child { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--gold); font-weight: 500; }
+
+/* Pot blocks for winners */
+.pot-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: .75rem;
+  background: rgba(0,0,0,0.15);
+}
+.pot-block-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .75rem;
+}
+.pot-badge {
+  font-size: .7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.pot-badge.main { background: rgba(39,174,96,0.2); color: var(--success); border: 1px solid rgba(39,174,96,0.3); }
+.pot-badge.side { background: rgba(26,82,118,0.3); color: #5dade2; border: 1px solid rgba(93,173,226,0.3); }
+.pot-amount { font-family: 'DM Mono', monospace; font-size: 1.05rem; font-weight: 500; color: var(--text); }
+.eligible-row { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem; }
+.eligible-chip {
+  font-size: .75rem;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.winner-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .45rem;
+}
+.winner-row span { font-size: .85rem; min-width: 90px; font-weight: 400; }
+.winner-row input { width: 110px; font-size: .85rem; }
+.balance-warn { font-size: .75rem; margin-top: .3rem; }
+.balance-warn.over { color: var(--danger); }
+.balance-warn.under { color: var(--warning); }
+.balance-warn.ok { color: var(--success); }
+
+/* Summary */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .55rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: .9rem;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row .player { color: var(--text); }
+.summary-row .player.folded { color: var(--text-dim); }
+.summary-row .net { font-family: 'DM Mono', monospace; font-weight: 500; font-size: .95rem; }
+.net.pos { color: var(--success); }
+.net.neg { color: var(--danger); }
+.net.zero { color: var(--text-muted); }
+
+.section-label {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--text-dim);
+  margin-bottom: .4rem;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+/* Folded players list */
+.folded-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+.folded-chip {
+  font-size: .75rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(231,76,60,0.08);
+  border: 1px solid rgba(231,76,60,0.2);
+  color: rgba(231,76,60,0.6);
+  cursor: pointer;
+  text-decoration: line-through;
+  transition: all .12s;
+}
+.folded-chip:hover { background: rgba(231,76,60,0.15); color: var(--danger); }
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .8rem;
+  color: var(--text-muted);
+  margin-top: .5rem;
+}
+.check-row input[type="checkbox"] { accent-color: var(--gold); width: 14px; height: 14px; cursor: pointer; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+.card, .pot-block { animation: fadeIn .2s ease; }
+
+.nav-btns { display: flex; gap: .5rem; margin-top: .75rem; }
+.nav-btns .btn-ghost { flex: 1; }
+.nav-btns .btn-primary { flex: 2; margin-top: 0; }
+
+/* mobile */
+@media (max-width: 420px) {
+  .player-action { grid-template-columns: 1fr 80px auto auto; gap: .35rem; }
+  .names-grid { grid-template-columns: 1fr; }
+  .container { padding: 1rem .75rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="container">
+
+  <div class="header">
+    <div class="header-suit">♠ ♥ ♣ ♦</div>
+    <h1>Pot Tracker</h1>
+    <p>Split pots · Side pots · All-ins</p>
+  </div>
+
+  <div id="app"></div>
+
+</div>
+
+<script>
+const app = document.getElementById('app');
+
+const state = {
+  screen: 'setup',
+  players: [],
+  initialBet: 10,
+  stage: 1,
+  stages: ['Pre-flop','Flop','Turn','River'],
+  bets: {},
+  folded: {},
+  allIn: {},
+  pots: []
+};
+
+function save() {
+  try { localStorage.setItem('poker_state', JSON.stringify(state)); } catch(e){}
+}
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem('poker_state'));
+    if(s && s.players && s.players.length) Object.assign(state, s);
+  } catch(e){}
+}
+
+function render() {
+  save();
+  if(state.screen === 'setup') renderSetup();
+  else if(state.screen === 'game') renderGame();
+  else if(state.screen === 'pots') renderPots();
+  else if(state.screen === 'summary') renderSummary();
+}
+
+/* ---- SETUP ---- */
+function playerLabel(i) {
+  if(i === 0) return 'D';
+  return 'D+' + i;
+}
+
+function renderSetup() {
+  const n = state.setupN || 4;
+
+  let previewHtml = '';
+  for(let i=0;i<n;i++){
+    previewHtml += `<span class="eligible-chip" style="font-family:'DM Mono',monospace">${playerLabel(i)}</span>`;
+  }
+
+  app.innerHTML = `
+  <div class="card">
+    <div class="card-title">New Game</div>
+    <div class="field-row">
+      <label>Players</label>
+      <input type="number" id="num-players" min="2" max="10" value="${n}" style="width:80px" oninput="updatePreview()">
+    </div>
+    <div class="field-row">
+      <label>Ante / Blind</label>
+      <input type="number" id="initial-bet" min="0" value="${state.initialBet}" style="width:100px">
+    </div>
+    <hr class="divider">
+    <div class="section-label">Seat order (D = Dealer)</div>
+    <div class="eligible-row" id="seat-preview" style="margin-top:.4rem">${previewHtml}</div>
+    <button class="btn btn-primary" onclick="startGame()">Deal Cards</button>
+  </div>`;
+}
+
+function updatePreview() {
+  const n = parseInt(document.getElementById('num-players').value) || 4;
+  state.setupN = n;
+  const preview = document.getElementById('seat-preview');
+  if(!preview) return;
+  let html = '';
+  for(let i=0;i<n;i++){
+    html += `<span class="eligible-chip" style="font-family:'DM Mono',monospace">${playerLabel(i)}</span>`;
+  }
+  preview.innerHTML = html;
+}
+
+function startGame() {
+  const n = parseInt(document.getElementById('num-players').value) || 4;
+  state.initialBet = parseFloat(document.getElementById('initial-bet').value) || 0;
+  state.setupN = n;
+  state.players = [];
+  for(let i=0;i<n;i++) state.players.push(playerLabel(i));
+  state.bets = {};
+  state.folded = {};
+  state.allIn = {};
+  state.stage = 1;
+  state.pots = [];
+  state.players.forEach(p => { state.bets[p] = {}; state.folded[p] = false; state.allIn[p] = false; });
+  state.screen = 'game';
+  render();
+}
+
+/* ---- GAME ---- */
+function renderGame() {
+  const s = state.stage;
+  const stageName = state.stages[s];
+  const active = state.players.filter(p => !state.folded[p]);
+  const folded = state.players.filter(p => state.folded[p]);
+
+  let tabsHtml = '';
+  state.stages.forEach((name, i) => {
+    if(i===0) return;
+    const cls = i === s ? 'active' : (i < s ? 'done' : '');
+    tabsHtml += `<button class="stage-tab ${cls}" onclick="goStage(${i})">${name}</button>`;
+  });
+  tabsHtml += `<button class="stage-tab" onclick="goStage(4)">Pots</button>`;
+
+  let playersHtml = '';
+  active.forEach(p => {
+    const betVal = state.bets[p][s] !== undefined ? state.bets[p][s] : '';
+    const isAllIn = state.allIn[p];
+    playersHtml += `
+      <div class="player-action" id="pa-${safeid(p)}">
+        <div class="pa-name">${escHtml(p)}${isAllIn ? ' <span style="font-size:.7rem;color:var(--warning)">ALL IN</span>' : ''}</div>
+        <div class="pa-bet"><input type="number" min="0" placeholder="0" value="${betVal}" ${isAllIn?'disabled':''} onchange="setBet('${escQ(p)}', this.value)"></div>
+        <button class="toggle-btn fold-btn" onclick="toggleFold('${escQ(p)}')" ${isAllIn?'disabled':''}>Fold</button>
+        <button class="toggle-btn allin-btn ${isAllIn?'active':''}" onclick="toggleAllIn('${escQ(p)}')" >All-in</button>
+      </div>`;
+  });
+
+  let foldedHtml = '';
+  if(folded.length) {
+    foldedHtml = `<hr class="divider"><div class="section-label">Folded (tap to undo)</div><div class="folded-list">
+      ${folded.map(p=>`<div class="folded-chip" onclick="unFold('${escQ(p)}')">${escHtml(p)}</div>`).join('')}
+    </div>`;
+  }
+
+  const total = calcTotalContributed();
+
+  let navBtns = '';
+  if(s < 3) {
+    navBtns = `<div class="nav-btns">
+      ${s > 1 ? `<button class="btn btn-ghost" onclick="goStage(${s-1})">← Back</button>` : ''}
+      <button class="btn btn-primary" onclick="goStage(${s+1})">${state.stages[s+1]} →</button>
+    </div>`;
+  } else {
+    navBtns = `<div class="nav-btns">
+      <button class="btn btn-ghost" onclick="goStage(${s-1})">← Back</button>
+      <button class="btn btn-primary" onclick="toPots()">Calculate Pots →</button>
+    </div>`;
+  }
+
+  app.innerHTML = `
+  <div class="stage-nav">${tabsHtml}</div>
+  <div class="pot-bar"><span>Total Pot</span><span>${fmt(total)}</span></div>
+  <div class="card">
+    <div class="card-title">${stageName}</div>
+    ${playersHtml}
+    ${foldedHtml}
+    ${navBtns}
+  </div>`;
+}
+
+function goStage(i) {
+  if(i === 4) { toPots(); return; }
+  state.stage = i;
+  state.screen = 'game';
+  render();
+}
+
+function setBet(p, v) {
+  state.bets[p][state.stage] = parseFloat(v) || 0;
+  save();
+}
+
+function toggleFold(p) {
+  state.folded[p] = !state.folded[p];
+  if(state.folded[p]) state.allIn[p] = false;
+  render();
+}
+
+function unFold(p) { state.folded[p] = false; render(); }
+
+function toggleAllIn(p) {
+  state.allIn[p] = !state.allIn[p];
+  render();
+}
+
+function toPots() {
+  state.pots = calcPots();
+  state.screen = 'pots';
+  render();
+}
+
+/* ---- POTS ---- */
+function renderPots() {
+  const pots = state.pots;
+  const grandTotal = pots.reduce((s,p)=>s+p.amount,0);
+
+  let tabsHtml = '';
+  state.stages.forEach((name, i) => {
+    if(i===0) return;
+    const cls = i <= state.stage ? 'done' : '';
+    tabsHtml += `<button class="stage-tab ${cls}" onclick="goStage(${i})">${name}</button>`;
+  });
+  tabsHtml += `<button class="stage-tab active">Pots</button>`;
+
+  let potsHtml = '';
+  pots.forEach((pot, pi) => {
+    const isMain = pi === 0 && !pots.slice(0,pi).some(x=>x.label==='Side pot');
+    const badgeCls = pot.label === 'Main pot' ? 'main' : 'side';
+    const eligHtml = pot.eligible.map(p=>`<span class="eligible-chip">${escHtml(p)}</span>`).join('');
+    const winnersHtml = pot.eligible.map(p => {
+      const v = (pot.winner_amounts||{})[p] || '';
+      return `<div class="winner-row"><span>${escHtml(p)}</span><input type="number" min="0" placeholder="0" value="${v}" oninput="setWinner(${pi},'${escQ(p)}',this.value)"></div>`;
+    }).join('');
+    potsHtml += `
+    <div class="pot-block" id="pot-block-${pi}">
+      <div class="pot-block-header">
+        <span class="pot-badge ${badgeCls}">${pot.label}</span>
+        <span class="pot-amount">${fmt(pot.amount)}</span>
+      </div>
+      <div class="section-label">Eligible</div>
+      <div class="eligible-row">${eligHtml}</div>
+      <div class="section-label">Winner payouts</div>
+      ${winnersHtml}
+      <div class="balance-warn" id="bw-${pi}"></div>
+    </div>`;
+  });
+
+  app.innerHTML = `
+  <div class="stage-nav">${tabsHtml}</div>
+  <div class="pot-bar"><span>Total Pot</span><span>${fmt(grandTotal)}</span></div>
+  <div class="card">
+    <div class="card-title">Pots & Winners</div>
+    ${potsHtml}
+    <button class="btn btn-primary" onclick="showSummary()">Final Summary →</button>
+  </div>`;
+
+  pots.forEach((_,pi) => updateBalance(pi));
+}
+
+function setWinner(pi, p, v) {
+  if(!state.pots[pi].winner_amounts) state.pots[pi].winner_amounts = {};
+  state.pots[pi].winner_amounts[p] = parseFloat(v) || 0;
+  updateBalance(pi);
+  save();
+}
+
+function updateBalance(pi) {
+  const pot = state.pots[pi];
+  const el = document.getElementById('bw-'+pi);
+  if(!el) return;
+  const assigned = Object.values(pot.winner_amounts||{}).reduce((s,v)=>s+v,0);
+  const diff = assigned - pot.amount;
+  if(assigned === 0) { el.textContent=''; return; }
+  if(diff > 0) { el.className='balance-warn over'; el.textContent=`⚠ Over by ${fmt(diff)}`; }
+  else if(diff < 0) { el.className='balance-warn under'; el.textContent=`${fmt(-diff)} still unassigned`; }
+  else { el.className='balance-warn ok'; el.textContent='✓ Balanced'; }
+}
+
+/* ---- SUMMARY ---- */
+function showSummary() { state.screen = 'summary'; render(); }
+
+function renderSummary() {
+  const winnings = {};
+  state.players.forEach(p => winnings[p] = 0);
+  state.pots.forEach(pot => {
+    Object.entries(pot.winner_amounts||{}).forEach(([p,amt]) => { winnings[p] = (winnings[p]||0) + amt; });
+  });
+
+  let rows = '';
+  state.players.forEach(p => {
+    const contributed = playerTotal(p);
+    const won = winnings[p] || 0;
+    const net = won - contributed;
+    const netStr = (net >= 0 ? '+' : '') + fmt(net);
+    const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
+    const foldedCls = state.folded[p] ? 'folded' : '';
+    rows += `<div class="summary-row">
+      <span class="player ${foldedCls}">${escHtml(p)}${state.folded[p] ? ' <span style="font-size:.7rem;opacity:.5">(folded)</span>' : ''}</span>
+      <span class="net ${netCls}">${netStr}</span>
+    </div>`;
+  });
+
+  app.innerHTML = `
+  <div class="card">
+    <div class="card-title">Final Results</div>
+    ${rows}
+  </div>
+  <div style="display:flex;gap:.5rem">
+    <button class="btn btn-ghost" style="flex:1" onclick="state.screen='pots';render()">← Back</button>
+    <button class="btn btn-primary" style="flex:2;margin-top:0" onclick="newGame()">New Game</button>
+  </div>`;
+}
+
+function newGame() {
+  state.screen = 'setup';
+  render();
+}
+
+/* ---- POT CALC ---- */
+function playerTotal(p) {
+  let t = state.initialBet;
+  state.stages.forEach((s,i) => { t += (state.bets[p]&&state.bets[p][i]||0); });
+  return t;
+}
+
+function calcTotalContributed() {
+  return state.players.reduce((s,p) => s + playerTotal(p), 0);
+}
+
+function calcPots() {
+  const contributions = {};
+  state.players.forEach(p => { contributions[p] = playerTotal(p); });
+
+  const allIns = state.players
+    .filter(p => state.allIn[p] && !state.folded[p])
+    .map(p => contributions[p])
+    .sort((a,b) => a-b);
+
+  const uniqueLevels = [...new Set(allIns)];
+  const pots = [];
+  const remaining = {...contributions};
+  let prev = 0;
+
+  uniqueLevels.forEach(level => {
+    const cap = level - prev;
+    if(cap <= 0) return;
+    let potTotal = 0;
+    const eligible = [];
+    state.players.forEach(p => {
+      const c = Math.min(remaining[p], cap);
+      potTotal += c;
+      remaining[p] -= c;
+      if(!state.folded[p] && contributions[p] >= level) eligible.push(p);
+    });
+    if(potTotal > 0) pots.push({label:'Side pot', amount: Math.round(potTotal*100)/100, eligible, winner_amounts:{}});
+    prev = level;
+  });
+
+  let mainTotal = 0;
+  state.players.forEach(p => { mainTotal += (remaining[p]||0); });
+  const mainEligible = state.players.filter(p => !state.folded[p]);
+
+  if(mainTotal > 0) {
+    pots.unshift({label:'Main pot', amount: Math.round(mainTotal*100)/100, eligible: mainEligible, winner_amounts:{}});
+  }
+
+  if(pots.length === 0) {
+    let total = 0;
+    state.players.forEach(p => total += contributions[p]);
+    pots.push({label:'Main pot', amount: Math.round(total*100)/100, eligible: state.players.filter(p=>!state.folded[p]), winner_amounts:{}});
+  }
+
+  return pots;
+}
+
+/* ---- UTILS ---- */
+function fmt(n) { return n.toLocaleString(undefined, {minimumFractionDigits: n%1===0?0:2, maximumFractionDigits:2}); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escQ(s) { return String(s).replace(/'/g,"\\'"); }
+function safeid(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+load();
+render();
+</script>
+</body>
+</html>
