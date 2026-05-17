@@ -714,7 +714,8 @@ function calcPots() {
 
   const uniqueLevels = [...new Set(allIns)];
   const pots = [];
-  const remaining = {...contributions};
+  const remaining = {};
+  state.players.forEach(p => { remaining[p] = contributions[p]; });
   let prev = 0;
 
   uniqueLevels.forEach(level => {
@@ -723,9 +724,11 @@ function calcPots() {
     let potTotal = 0;
     const eligible = [];
     state.players.forEach(p => {
+      // ALL players (including folded) contribute up to the cap
       const c = Math.min(remaining[p], cap);
       potTotal += c;
       remaining[p] -= c;
+      // Only non-folded players who put in enough can WIN
       if(!state.folded[p] && contributions[p] >= level) eligible.push(p);
     });
     if(potTotal > 0) pots.push({label:'Side pot', amount: Math.round(potTotal*100)/100, eligible, winner_amounts:{}});
